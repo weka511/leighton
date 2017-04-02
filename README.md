@@ -1,9 +1,6 @@
 # leighton
-Replication of Leighton and Murray
 
-## Leighton and Murray
-
-I have revisited [Leighton and Murray's Behavior of Carbon Dioside and Other Volatiles on Mars](http://www.mars.asu.edu/christensen/classdocs/Leighton_BehavioCO2_science_66.pdf)
+Replication of [Leighton and Murray's Behavior of Carbon Dioside and Other Volatiles on Mars](http://www.mars.asu.edu/christensen/classdocs/Leighton_BehavioCO2_science_66.pdf)
 
 
 | File | Purpose |
