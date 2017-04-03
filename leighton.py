@@ -14,7 +14,7 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>
 
 '''Driver program for Leighton & Murray simulation'''
-import thermalmodel, planet, solar, utilities, sys,getopt, string, physics, math
+import thermalmodel, planet, kepler.solar as s, utilities, sys,getopt, string, physics, math
 
 def help():
       '''Generate help text for user'''
@@ -88,7 +88,7 @@ def main(argv):
 
       mars = planet.create('Mars')
 
-      solar_model = solar.Solar(mars)     
+      solar_model = s.Solar(mars)     
       
       # If user doesn't specify starting temperature, use stable value
       stableTemperatureSpecified = temperature<0

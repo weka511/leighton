@@ -13,46 +13,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>
 
-''' Model for solar irradiation, based on Solar Radiation on Mars, 
- Joseph Appelbaum & Dennis Flood, Lewis Research Center, NASA '''
+'''
+Model for solar irradiation, based on Solar Radiation on Mars, 
+ Joseph Appelbaum & Dennis Flood, Lewis Research Center, NASA 
+'''
 
-import math, planet,utilities, kepler.kepler as k
 
 
-class Solar:
-    '''
-    Model so;ar irradiation.
-    
-    Attributes:
-       planet  The planet that we are processing
-       S       Solar constant at the mean Sun-Earth distance of l AU, in N/m2
-    '''
-    def __init__(self,planet,S = 1371):
-        self.planet=planet
-        self.S = S   # Solar constant at the mean Sun-Earth distance of l AU, in N/m2
-                     # Appelbaum & Flood        
-        
-#   Beam Irradience in W/m2
-#   Appelbaum & Flood equation (1)
-    def beam_irradience(self,r):
-        return self.S/(r*r)
- 
-#   Beam irradience on a horizonal surface
-#   Appelbaum & Flood equations (5) & (6)
-    def surface_irradience(self,true_longitude,latitude,T):
-        cos_zenith_angle = self.planet.cos_zenith_angle(true_longitude,latitude,T) #FIXME - should be areocentric longitude
-        r=self.planet.instantaneous_distance(true_longitude)
-        beam_irradience = self.beam_irradience(r)
-        return max(0,cos_zenith_angle*beam_irradience)
     
 if __name__=='__main__':
-    import matplotlib.pyplot as plt, unittest
+    import math, matplotlib.pyplot as plt, unittest, utilities, planet, kepler.solar as s
     from scipy.integrate import quad       
 
     class TestMarsMethods(unittest.TestCase):
         def setUp(self):
             self.mars = planet.Mars()
-            self.solar = Solar(self.mars)          
+            self.solar = s.Solar(self.mars)          
     
     #   This test is based on figure 3 of Appelbaum & Flood, with two adjustments.
     #   Appelbaum & Flood have the perihelion and aphelion at LS = 249 degress and
@@ -135,7 +111,7 @@ if __name__=='__main__':
         plt.plot(x,y,colour,label=r'${0}^\circ$'.format(true_longitude)) 
 
     mars = planet.create('Mars')
-    solar = Solar(mars)
+    solar = s.Solar(mars)
  
     # Mean beam irradience at top of atmosphere   
     beam_irradience_top=solar.beam_irradience(mars.a)

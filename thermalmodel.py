@@ -18,7 +18,7 @@ This module carries out heat flow calculation for Mars.
 The thermal model consists of a series of Layers,
 the top one being the Surface
 '''
-import math, planet, solar, utilities, physics, kepler.kepler as k
+import math, planet, kepler.solar as s, utilities, physics, kepler.kepler as k
 
 
 
@@ -268,7 +268,7 @@ if __name__=='__main__':
     import matplotlib.pyplot as plt
     
     mars = planet.create('Mars')
-    solar = solar.Solar(mars)
+    solar = s.Solar(mars)
         
     history = utilities.InternalTemperatureLog()    
     thermal=ThermalModel(10,[(9,0.015),(10,0.3)],solar,mars,history,225.9,False)
