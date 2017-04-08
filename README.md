@@ -8,6 +8,7 @@ Replication of [Leighton and Murray's Behavior of Carbon Dioside and Other Volat
 | cores.py | Process model via leighton.py, but run across all available cores |
 | cores.dat | Default paramter file for cores.py |
 | gui.py | GUI for viewer.py |
+| kepler | Submodule with models for planetary motion and Solar irradiance | 
 | leighton.py | Driver for executing model |
 | planet.py |  Repository for basic data about planets |
 | solar.py |  Model for solar irradiation, based on [Solar Radiation on Mars, Joseph Appelbaum & Dennis Flood, Lewis Research Center, NASA](http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19890018252.pdf) |
