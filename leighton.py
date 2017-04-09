@@ -41,10 +41,10 @@ def get_output_file_name(from_date,to_date,latitude,temperature,co2):
 def main(argv):
       '''Execute the model'''
       outputfile  = ''
-      from_date   = 0
-      to_date     = 720
-      latitude    = 0
-      step        = 10
+      from_date   = 0    # Mars days
+      to_date     = 720  # Mars days
+      latitude    = 0    # Degrees
+      step        = 10   # Steps per hour
       temperature = -1
       co2         = True
       spec        = [(9,0.015),(10,0.3)]

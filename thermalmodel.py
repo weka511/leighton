@@ -234,7 +234,7 @@ class ThermalModel:
     def runModel(self,start_day,number_of_days,number_of_steps_in_hour):
         hours_in_day=24
         step_size = 3600/float(number_of_steps_in_hour) 
-        for day,hour,_,step,_,_,_,_,_,true_longitude in steps(0,2440,10,self.planet):
+        for day,hour,_,step,_,_,_,_,_,true_longitude in steps(0,number_of_days,10,self.planet):
             self.record = utilities.TemperatureRecord(day,hour,hours_in_day,true_longitude)
             self.propagate_temperature(true_longitude,hour,step_size)
             if step==0:

@@ -22,9 +22,15 @@ Model for solar irradiation, based on Solar Radiation on Mars,
 
     
 if __name__=='__main__':
-    import math, matplotlib.pyplot as plt, unittest, utilities, planet, kepler.solar as s
-    from scipy.integrate import quad       
-
+    import math, matplotlib.pyplot as plt, unittest, utilities, planet, kepler.solar as s, kepler.kepler as k
+    from scipy.integrate import quad 
+    
+    def true_longitude(day):
+        M=2*math.pi*(day-2)/687 #perihelion Jan 3
+        E=k.get_eccentric_anomaly(M,mars.e)
+        true_anomaly=k.get_true_anomaly(E,mars.e)
+        return k.true_longitude_from_true_anomaly(true_anomaly)
+    
     class TestMarsMethods(unittest.TestCase):
         def setUp(self):
             self.mars = planet.Mars()
@@ -125,9 +131,10 @@ if __name__=='__main__':
     d0=-1
     d1=-1
 
-    for i in range(360):
+    for i in range(687):
         xs.append(i)
-        d2=mars.instantaneous_distance(i)
+        tl=true_longitude(i)
+        d2=mars.instantaneous_distance(tl)
         ys.append(solar.beam_irradience(d2))
         if d0>-1 and d1>-1:
             if d0>d1 and d1<d2:

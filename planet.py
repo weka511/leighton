@@ -15,7 +15,7 @@
 
 '''Repository for basic data about planets'''
 
-import math, physics, kepler.kepler as k
+import math, physics, kepler.kepler as k, kepler.solar as s
 
 
     
@@ -94,7 +94,7 @@ class Planet:
         Parameters:
              true_longitude        
         '''
-        return math.sin(self.obliquity) * math.sin(true_longitude)
+        return s.sin_declination(self.obliquity,true_longitude)
      
     def cos_zenith_angle(self,true_longitude,latitude,T):
         '''
@@ -105,10 +105,7 @@ class Planet:
 
         Renewable Energy 32 (2007) 1187-1205
         '''
-        sin_declination=self.sin_declination(true_longitude)
-        cos_declination=math.sqrt(1-sin_declination*sin_declination)
-        return math.sin(latitude)*sin_declination +            \
-            math.cos(latitude)*cos_declination *  math.cos(self.hour_angle(T))
+        return s.cos_zenith_angle(self.obliquity,true_longitude,latitude,T)
 
     def hour_angle(self,T):
         '''
@@ -117,7 +114,7 @@ class Planet:
         Parameters:
              T     Time in Planetary hours
         '''
-        return math.radians(15*T-180)
+        return s.hour_angle(T)
 
     def get_earth_days_in_year(self):
         '''
