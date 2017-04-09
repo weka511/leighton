@@ -22,7 +22,7 @@ Model for solar irradiation, based on Solar Radiation on Mars,
 
     
 if __name__=='__main__':
-    import math, matplotlib.pyplot as plt, unittest, utilities, planet, kepler.solar as s, kepler.kepler as k
+    import math, matplotlib.pyplot as plt, unittest, utilities, planet, kepler.solar as s, kepler.kepler as k, numpy as np, matplotlib.cm as cm
     from scipy.integrate import quad 
     
     def true_longitude(day):
@@ -91,10 +91,10 @@ if __name__=='__main__':
     def integrand(x, solar,ls):
         return solar.surface_irradience(ls,22.3,x)
     
-    try:
-        unittest.main()
-    except SystemExit as inst:
-        pass    
+    #try:
+        #unittest.main()
+    #except SystemExit as inst:
+        #pass    
     
     
     def generate_irradiance(planet,true_longitude,latitude):
@@ -132,8 +132,8 @@ if __name__=='__main__':
     d1=-1
 
     for i in range(687):
-        xs.append(i)
         tl=true_longitude(i)
+        xs.append(math.degrees(tl))
         d2=mars.instantaneous_distance(tl)
         ys.append(solar.beam_irradience(d2))
         if d0>-1 and d1>-1:
@@ -149,9 +149,10 @@ if __name__=='__main__':
                 print ('Aphelion day={0:.3f}, distance={1:.3f}, irradiance={2:.2f}'.format(x,d,irr))
         d0=d1
         d1=d2
-    plt.figure(1,figsize=(12,12))
+    #plt.figure(1,figsize=(12,12))
+    fig, ax = plt.subplots(figsize=(16,12))
     plt.subplot(221)
-
+    plt.axis([0, 360, 450, 750])
     plt.title('Beam irradience at top of Mars atmosphere')
     plt.xlabel('Areocentric longitude - degrees')
     plt.ylabel('Beam irradience at top of Mars atmosphere - W/m2')
@@ -164,14 +165,15 @@ if __name__=='__main__':
     
     x=[]
     y=[]
-    for i in range(360):
-        x.append(i)
-        y.append(math.degrees(math.asin(mars.sin_declination(i))))
+    for day in range(687):
+        tl=true_longitude(day)
+        x.append(math.degrees(tl))
+        y.append(math.degrees(math.asin(mars.sin_declination(tl))))
 
     plt.subplot(222)
     plt.title('Variation of solar declination angle')
     plt.axis([0, 360, -25, 25])
-    plt.xlabel('Areocentric longitude - degrees')
+    plt.xlabel('True longitude - degrees')
     plt.ylabel('Solar Declination Angle - degrees')
     plt.grid(True)     
     plt.plot(x,y)
@@ -190,5 +192,27 @@ if __name__=='__main__':
     plt.axis([12, 20, 0, 600])
     plt.legend(loc='upper right',title=r'$L_S$')
     plt.grid(True)
+    
+    def surface_irradience(day,latitude):
+        return solar.surface_irradience_daily(true_longitude(day),math.radians(latitude),total=False)
+    
+    ax4=plt.subplot(224)
+    
+    x = np.linspace(0,687) 
+    y = np.linspace(-90,90) 
+    
+    X, Y = np.meshgrid(x, y) 
+    Z = (np.vectorize(surface_irradience))(X,Y) 
+    
+    cax=plt.pcolormesh(X, Y, Z, cmap = cm.jet) 
+    cbar = fig.colorbar(cax)
+    
+    #ax4.set_xticks([i for i in lengths_of_months()])
+    #ax4.set_xticklabels(['JFMAMJJASOND'[i] for i in range(0,12)])    
+    #ax4.set_yticks([i for i in range(-90,91,30)])
+    #ax4.set_yticklabels([lat(i) for i in range(-90,91,30)])
+    plt.title('Surface Irradiance')    
+    
+    
     plt.savefig('solar')
     plt.show()    
