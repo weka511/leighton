@@ -15,8 +15,10 @@
 
 '''
 This module carries out heat flow calculation for Mars.
-The thermal model consists of a series of Layers,
-the top one being the Surface
+The thermal model consists of a series of Layers, the top one being the Surface.
+Heat can flow between layers, and the Surface can gain energy from the Sun, and
+radiate energy into space. The surface can also gain energy by freezing CO2 and 
+lose it to sublimation.
 '''
 import math, planet, kepler.solar as s, utilities, physics, kepler.kepler as k
 
@@ -229,6 +231,7 @@ class MedialLayer(Layer):
         Layer.__init__(self,'Medial',latitude,thickness,planet,temperature)
         
     def propagate_temperature(self,above,below,true_longitude,T,dT,record,model):
+        '''Gain heat from both neighbours'''
         internal_inflow = self.heat_flow(above) + self.heat_flow(below)
         self.update_temperature(internal_inflow,dT)
         record.add(self.temperature)
@@ -241,6 +244,7 @@ class Bottom(Layer):
         Layer.__init__(self,'Bottom',layer.latitude,layer.thickness,layer.planet,layer.temperature)
         
     def propagate_temperature(self,above,below,true_longitude,T,dT,record,model):
+        '''Gain heat from layer above'''
         internal_inflow = self.heat_flow(above)
         self.update_temperature(internal_inflow,dT)
         record.add(self.temperature)
@@ -266,9 +270,9 @@ class ThermalModel:
         unless user specifies a start
         
         Parameters:
-            solar
-            planet
-            proportion
+            solar        The solar model
+            planet       Planet for which we are calculating
+            proportion   Propoertion of solar energy that we intercept
         '''
         beam_irradience=proportion * solar.beam_irradience(planet.a)
         return physics.Radiation.reverse_bolzmann(beam_irradience)    
@@ -304,12 +308,26 @@ class ThermalModel:
         self.zipper_layers = list(utilities.slip_zip(self.layers))
  
     def temperature(self,index):
+        '''
+        Get temperature of specified layer
+        
+        Parameters:
+            index     Identified layer (0 for surface)
+        '''
         return self.layers[index].temperature
     
-    # Calculate heat transfer during one time step
-    # Don't change temperatures until every Layer has been processed
-    # otherwise energy won't be conserved, which would be a Very Bad Thing
     def propagate_temperature(self,true_longitude,T,dT):
+        '''
+        Calculate heat transfer during one time step
+        Don't change temperatures until every Layer has been processed
+        otherwise energy won't be conserved, which would be a Very Bad Thing
+        
+        Parameters:
+            true_longitude
+            T
+            dT
+        
+        '''
         total__internal_inflow=0
         for above,layer,below in self.zipper_layers:
             total__internal_inflow+=layer.propagate_temperature(above,below,true_longitude,T,dT,self.record,self)
@@ -318,12 +336,16 @@ class ThermalModel:
         for layer in self.layers:
             layer.temperature=layer.new_temperature
      
-    # Calculate heat transfer during all time steps      
-    # parameters:
-    #    start_day
-    #    number_of_days
-    #    number_of_steps_in_hour
+
     def runModel(self,start_day,number_of_days,number_of_steps_in_hour):
+        '''
+        Calculate heat transfer during all time steps 
+        
+        Parameters:
+            start_day                Day simulation starts
+            number_of_days           Length of simulation in planetary days
+            number_of_steps_in_hour  Number of steps to take in one planetary hour
+        '''
         hours_in_day=24
         step_size = 3600/float(number_of_steps_in_hour) 
         for day,hour,_,step,_,_,_,_,_,true_longitude in steps(0,number_of_days,10,self.planet):
@@ -338,6 +360,11 @@ def steps(start_day,number_of_days,number_of_steps_in_hour,planet):
     
     for day,hour,hour_with_step,step,time,M,E,nu,r,true_longitude in steps(...):
     
+    Parameters:
+        start_day                Day simulation starts
+        number_of_days           Length of simulation in planetary days
+        number_of_steps_in_hour  Number of steps to take in one planetary hour
+        planet                   Planet for which we are calculating
     '''
     days_in_year=planet.get_my_days_in_year()
     hours_in_day=24
