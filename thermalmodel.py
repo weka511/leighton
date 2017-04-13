@@ -28,6 +28,17 @@ class Layer:
     
     Layer is an abstact class, which is implemented by Surface, Medial,
     and Bottom.
+    
+    Attributes:
+        name              'Surface', 'Medial', or 'Bottom' - used for logging
+        latitude          Latitude at which we are calculating
+        thickness         Thickness of layer
+        temperature       Temperature at start of step
+        new_temperature   Used to hold temperature that we ar calculating, to
+                          ensure that entire step takes place at one
+                          temperature
+        planet            Planet we are modelling
+        heat_gain         Gain during one step
     '''
     def __init__(self,name,latitude,thickness,planet,temperature):
         '''Create a layer'''
@@ -66,19 +77,28 @@ class Layer:
         Don't change temperatures until every Layer has been processed
         otherwise energy won't be conserved, which would be a Very Bad Thing;
         just cache result
-        parameters:
-           heat_gain_per_second
-           dT     Number of seconds
-           planet
+        
+        Parameters:
+           heat_gain_per_second  Rate at which heat flows in
+           dT                    Number of seconds
+           planet                Planet we are modelling
         '''
         self.calculate_heat_gain(heat_gain_per_second,dT)
         delta_temperature= self.heat_gain / (self.planet.C * self.planet.rho * self.thickness)
         self.new_temperature += delta_temperature
 
     def calculate_heat_gain(self,heat_gain_per_second,dT):
+        '''
+        Heat gained during step
+        
+        Parameters:
+            heat_gain_per_second   Rate at which heat flows in
+            dT                     Number of seconds
+        '''
         self.heat_gain = heat_gain_per_second*dT
         
     def __str__(self):
+        '''Convert to text for display'''
         return ( 
             '{0}: Latitude={1:6.1f},'  
             'Thickness={2:6.3f}, '  
@@ -90,9 +110,28 @@ class Layer:
                      self.new_temperature)
 
 class Surface(Layer):
-    '''Top Layer: gains and loses heat through radiation, 
-    and exchanges heat with Layer below'''
+    '''
+    Top Layer: gains and loses heat through radiation, 
+    and exchanges heat with Layer below
+    
+    Attributes:
+        solar         Solar model
+        co2           Indicates whether we should include CO2 (sublimation
+                         and condensation)
+        total_co2     Amount of CO2 frozen    
+    '''
     def __init__(self,latitude,thickness,solar,planet,temperature,co2):
+        '''
+        Initialize
+        
+        Parameters:
+            latitude     The latitude for which we are performing calculations
+            solar        Solar model
+            planet       The planet for which we are performing calculations
+            temperature  Starting temperature
+            co2          Indicates whether we should include CO2 (sublimation
+                         and condensation)
+        '''
         Layer.__init__(self,'Surface',latitude,thickness,planet,temperature)
         self.solar     = solar
         self.co2       = co2
@@ -134,18 +173,30 @@ class Surface(Layer):
         return internal_inflow
     
     def bolzmann(self,t):
+        '''Loss of energy through radiation'''
         return self.emissivity()*physics.Radiation.bolzmann(t)
  
     def absorption(self):
+        '''Calculate absorbed energy, assuming frozen CO2 affects albedo'''
         if self.total_co2>0:
             return 1-physics.CO2.albedo
         else:        
             return self.planet.F  
     
     def emissivity(self):
+        '''Emissivity of surface'''
         return self.planet.E   # TODO co2
     
     def sublimate_co2(self,total_inflow_before_latent_heat):
+        '''
+        Sublimate CO2
+        
+        Parameters:
+            total_inflow_before_latent_heat
+            
+        Returns:
+            temperature inflow (subtract latent heat)
+        '''
         if self.total_co2>0:
             self.total_co2-=abs(total_inflow_before_latent_heat)/physics.CO2.latent_heat
             if self.total_co2>0:
@@ -158,15 +209,22 @@ class Surface(Layer):
             return total_inflow_before_latent_heat
 
     def co2_is_available(self):
+        '''Indicates whther there is CO2 available to freeze (currently unlimited)'''
         return True
     
     def freeze_co2(self,total_inflow_before_latent_heat):
+        '''
+        Freeze CO2
+        
+        Parameters:
+            total_inflow_before_latent_heat
+        '''
         self.total_co2+=abs(total_inflow_before_latent_heat)/physics.CO2.latent_heat
         return 0
     
 
 class MedialLayer(Layer):
-    '''Ordinary layers - excanges heat with Layers above and below'''
+    '''Ordinary layers - exchanges heat with Layers above and below'''
     def __init__(self,latitude,thickness,planet,temperature):
         Layer.__init__(self,'Medial',latitude,thickness,planet,temperature)
         
@@ -190,14 +248,48 @@ class Bottom(Layer):
 
 
 class ThermalModel:
-    '''The Thermal Model is a collection of Layers'''
-    @staticmethod
-    # Estimate stable temperature
+    '''
+    Model heat losses and gains by a Planet
+    
+    Attributes:
+        layers         The Thermal Model is a collection of Layers
+        planet         The planet that we are modelling
+        history        Used to log evolution of temperatures 
+        record         Used to log evolution of temperatures
+        zipper_layers  A colection of triplets of layers so we can calculate
+                       heat flows between one layer and its neighbours
+    '''
+    @staticmethod 
     def stable_temperature(solar,planet,proportion=0.25):
+        '''
+        Used at start of iterations to estimate stable temperature,
+        unless user specifies a start
+        
+        Parameters:
+            solar
+            planet
+            proportion
+        '''
         beam_irradience=proportion * solar.beam_irradience(planet.a)
         return physics.Radiation.reverse_bolzmann(beam_irradience)    
     
-    def __init__(self,latitude,spec,solar,planet,history,temperature,co2):     
+    def __init__(self,latitude,spec,solar,planet,history,temperature,co2):
+        '''
+        Initialize model
+        
+        Parameters:
+            latitude     The latitude for which we are performing calculations
+            spec         Specification for layers. A list of the form
+                         [(n1,thickness1),(n2,thickness2)...]
+                         where n1 is the number of layers of thisckness 1, etc.
+                         The list starts at the topmost layer
+            solar        Solar model
+            planet       The planet for which we are performing calculations
+            history      Used to log evolution of temperatures 
+            temperature  Starting temperature
+            co2          Indicates whether we should include CO2 (sublimation
+                         and condensation)
+        '''
         self.layers=[]
         self.planet=planet
         (n,dz)=spec[0]
