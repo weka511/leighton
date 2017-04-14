@@ -53,12 +53,27 @@ class Layer:
         self.heat_gain = 0
         
     def propagate_temperature(self,above,below,true_longitude,T,dT,record,model):
+        '''
+        Exchange heat with neighbours. Implemented in child classes.
+        
+        Parameters:
+            above            Layer above me
+            below            Layer below me
+            true_longitude   Position in orbit (used for radiation gain)
+            T                Current time
+            dT               Duration of time step
+            record           Used to log temperatures
+            model            Refernece back to thermal model
+        '''
         raise NotImplementedError('propagate_temperature')
     
     def temperature_gradient(self,neighbour):
         '''
         Calculate temperature gradient between neighbour and this layer.
         Gradient will be +ve (heat will flow to me) if neighbour is hotter
+        
+        Parameters:
+            neighbour
         '''
         temperature_difference = neighbour.temperature - self.temperature
         distance = 0.5*(self.thickness + neighbour.thickness)
@@ -119,7 +134,7 @@ class Surface(Layer):
     Attributes:
         solar         Solar model
         co2           Indicates whether we should include CO2 (sublimation
-                         and condensation)
+                      and condensation)
         total_co2     Amount of CO2 frozen    
     '''
     def __init__(self,latitude,thickness,solar,planet,temperature,co2):
@@ -140,16 +155,31 @@ class Surface(Layer):
         self.total_co2 = 0
     
     def update_temperature_adjust_for_co2(self,total_inflow_before_latent_heat,dT):
+        '''
+        If hot enough to sublimate CO2, sublimate any that has frozen.
+        If not hot enough, freeze some CO2
+        '''
         if self.temperature>physics.CO2.condensation_temperature:
             if self.total_co2>0 and total_inflow_before_latent_heat>0:
                 total_inflow_before_latent_heat=self.sublimate_co2(total_inflow_before_latent_heat)
-            self.update_temperature(total_inflow_before_latent_heat,dT)
         else:
             if self.co2_is_available() and total_inflow_before_latent_heat<0:
                 total_inflow_before_latent_heat=self.freeze_co2(total_inflow_before_latent_heat)           
-            self.update_temperature(total_inflow_before_latent_heat,dT) 
+        self.update_temperature(total_inflow_before_latent_heat,dT) 
             
     def propagate_temperature(self,above,below,true_longitude,T,dT,record,model):
+        '''
+        Exchange heat with Sun, empty space, CO2, and the layer below.
+        
+        Parameters:
+            above            Layer above me (null)
+            below            Layer below me
+            true_longitude   Position in orbit (used for radiation gain)
+            T                Current time
+            dT               Duration of time step
+            record           Used to log temperatures
+            model            Reference back to thermal model
+        '''        
         irradiance=self.absorption()*self.solar.surface_irradience(true_longitude,self.latitude,T)
         
         #Use formula from Leighton & Murray for surface temperature
@@ -163,7 +193,7 @@ class Surface(Layer):
         temperature_difference = temperature_2 - temperature
         distance = below.thickness#0.5* 
         
-        temperature_gradient= (temperature_difference / distance)        
+        temperature_gradient = (temperature_difference / distance)        
         internal_inflow=self.planet.K * temperature_gradient
 
         total_inflow_before_latent_heat = irradiance - radiation_loss + internal_inflow
@@ -171,6 +201,7 @@ class Surface(Layer):
             self.update_temperature_adjust_for_co2(total_inflow_before_latent_heat,dT)
         else:
             self.update_temperature(total_inflow_before_latent_heat,dT)
+            
         record.add(self.temperature)
         return internal_inflow
     
@@ -191,7 +222,8 @@ class Surface(Layer):
     
     def sublimate_co2(self,total_inflow_before_latent_heat):
         '''
-        Sublimate CO2
+        Sublimate CO2. Use incoming heat to melt some CO2. If this
+        melts all the CO2, return remaining heat.
         
         Parameters:
             total_inflow_before_latent_heat
@@ -199,20 +231,17 @@ class Surface(Layer):
         Returns:
             temperature inflow (subtract latent heat)
         '''
-        if self.total_co2>0:
+        if self.total_co2>0 and total_inflow_before_latent_heat>0:
             self.total_co2-=abs(total_inflow_before_latent_heat)/physics.CO2.latent_heat
             if self.total_co2>0:
                 return 0
             else:
-                balance=abs(self.total_co2)*physics.CO2.latent_heat
-                self.total_co2=0
+                balance = abs(self.total_co2)*physics.CO2.latent_heat
+                self.total_co2 = 0
                 return balance
         else:
             return total_inflow_before_latent_heat
 
-    def co2_is_available(self):
-        '''Indicates whther there is CO2 available to freeze (currently unlimited)'''
-        return True
     
     def freeze_co2(self,total_inflow_before_latent_heat):
         '''
@@ -224,6 +253,9 @@ class Surface(Layer):
         self.total_co2+=abs(total_inflow_before_latent_heat)/physics.CO2.latent_heat
         return 0
     
+    def co2_is_available(self):
+        '''Indicates whther there is CO2 available to freeze (currently unlimited)'''
+        return True    
 
 class MedialLayer(Layer):
     '''Ordinary layers - exchanges heat with Layers above and below'''
@@ -231,7 +263,18 @@ class MedialLayer(Layer):
         Layer.__init__(self,'Medial',latitude,thickness,planet,temperature)
         
     def propagate_temperature(self,above,below,true_longitude,T,dT,record,model):
-        '''Gain heat from both neighbours'''
+        '''
+        Exchange heat with neighbours above and below
+        
+        Parameters:
+            above            Layer above me
+            below            Layer below me
+            true_longitude   Position in orbit (used for radiation gain)
+            T                Current time
+            dT               Duration of time step
+            record           Used to log temperatures
+            model            Reference back to thermal model
+        '''      
         internal_inflow = self.heat_flow(above) + self.heat_flow(below)
         self.update_temperature(internal_inflow,dT)
         record.add(self.temperature)
@@ -244,7 +287,18 @@ class Bottom(Layer):
         Layer.__init__(self,'Bottom',layer.latitude,layer.thickness,layer.planet,layer.temperature)
         
     def propagate_temperature(self,above,below,true_longitude,T,dT,record,model):
-        '''Gain heat from layer above'''
+        '''
+        Exchange heat with neighbour above.
+        
+        Parameters:
+            above            Layer above me
+            below            Layer below me (null)
+            true_longitude   Position in orbit (used for radiation gain)
+            T                Current time
+            dT               Duration of time step
+            record           Used to log temperatures
+            model            Reference back to thermal model
+        '''      
         internal_inflow = self.heat_flow(above)
         self.update_temperature(internal_inflow,dT)
         record.add(self.temperature)
