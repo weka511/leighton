@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 Greenweaves Software Pty Ltd
+# Copyright (C) 2015-2019 Greenweaves Software Limited
 
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ class Planet:
         self.e                       = e
         self.obliquity               = math.radians(obliquity)  
         self.longitude_of_perihelion = math.radians(longitude_of_perihelion)
+        
     def __str__(self):
         '''Convert planet to string'''
         return ('{0}\n'
@@ -133,14 +134,15 @@ class Planet:
     
 class Mercury(Planet):
     '''Data for the planet Mercury'''
+    
     def __init__(self):
         '''Create data for planet'''
         Planet.__init__(self,
                         'Mercury',
-                        a=0.387098,  # Wikipedia Mercury page
-                        e=0.205630,  # Wikipedia Mercury page
-                        obliquity=0,  # Wikipedia Axial Tilt page
-                        longitude_of_perihelion=77.45645) # Murray & Dermott
+                        a                       = 0.387098,  # Wikipedia Mercury page
+                        e                       = 0.205630,  # Wikipedia Mercury page
+                        obliquity               = 0,  # Wikipedia Axial Tilt page
+                        longitude_of_perihelion = 77.45645) # Murray & Dermott
         
 class Venus(Planet):
     '''Data for the planet Venus'''
@@ -165,11 +167,12 @@ class Earth(Planet):
         '''Create data for planet'''
         Planet.__init__(self,
                         'Earth',
-                        a=1.0, # the  semimajor axis in AU,
-                        e=0.017, #  eccentricity
-                        obliquity=23.4,   # Wikipedia Axial Tilt page
-                        longitude_of_perihelion=102.94719)
-        self.hours_in_day = 24
+                        a                       = 1.0, # the  semimajor axis in AU,
+                        e                       = 0.017, #  eccentricity
+                        obliquity               = 23.4,   # Wikipedia Axial Tilt page
+                        longitude_of_perihelion = 102.94719)
+        
+        self.hours_in_day        = 24
         self.average_temperature = 300        
     def get_days_in_year(self):
         return 365.256363004
@@ -185,12 +188,12 @@ class Mars(Planet):
                         obliquity=24.936, # Appelbaum & Flood
                         longitude_of_perihelion=336.04084)
         
-        self.hours_in_day = 24.6597 #  http://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html
-        self.F = 0.85 # absorption fraction - Leighton & Murray
-        self.E = 0.85 # Emissivity - Leighton & Murray
-        self.K = 6e-5 * physics.Conversion.cm_per_metre # soil conductivity - Leighton & Murray
-        self.C = 3.3 * physics.Conversion.gm_per_Kg # specific heat
-        self.rho = 1.6 * physics.Conversion.cm3_per_meter3 / physics.Conversion.gm_per_Kg # density
+        self.hours_in_day        = 24.6597 #  http://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html
+        self.F                   = 0.85 # absorption fraction - Leighton & Murray
+        self.E                   = 0.85 # Emissivity - Leighton & Murray
+        self.K                   = 6e-5 * physics.Conversion.cm_per_metre # soil conductivity - Leighton & Murray
+        self.C                   = 3.3 * physics.Conversion.gm_per_Kg # specific heat
+        self.rho                 = 1.6 * physics.Conversion.cm3_per_meter3 / physics.Conversion.gm_per_Kg # density
         self.average_temperature = 210 #http://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html
         
 class Jupiter(Planet):
@@ -199,10 +202,10 @@ class Jupiter(Planet):
         '''Create data for planet'''
         Planet.__init__(self,
                         'Jupiter',
-                        a=5.204267,  # Wikipedia Jupiter page
-                        e=0.048775,  # Wikipedia Jupiter page
-                        obliquity=3.13, # Wikipedia Axial Tilt page
-                        longitude_of_perihelion=14.75385)
+                        a                       = 5.204267,  # Wikipedia Jupiter page
+                        e                       = 0.048775,  # Wikipedia Jupiter page
+                        obliquity               = 3.13, # Wikipedia Axial Tilt page
+                        longitude_of_perihelion = 14.75385)
 
 class Saturn(Planet):
     '''Data for the planet Saturn'''
@@ -210,10 +213,10 @@ class Saturn(Planet):
         '''Create data for planet'''
         Planet.__init__(self,
                         'Saturn',
-                        a=9.5820172,   # Wikipedia Saturn page
-                        e=0.055723219,  # Wikipedia Saturn page
-                        obliquity=26.73, # Wikipedia Axial Tilt page
-                        longitude_of_perihelion=92.43194)
+                        a                       = 9.5820172,   # Wikipedia Saturn page
+                        e                       = 0.055723219,  # Wikipedia Saturn page
+                        obliquity               = 26.73, # Wikipedia Axial Tilt page
+                        longitude_of_perihelion = 92.43194)
         
 class Uranus(Planet):
     '''Data for the planet Uranus'''
@@ -232,10 +235,10 @@ class Neptune(Planet):
         '''Create data for planet'''
         Planet.__init__(self,
                         'Neptune',
-                        a=30.070900,  # Wikipedia Jupiter page
-                        e=0.00867797,  # Wikipedia Neptune page
-                        obliquity=28.32,   # Wikipedia Axial Tilt page
-                        longitude_of_perihelion=44.97135)
+                        a                       = 30.070900,  # Wikipedia Jupiter page
+                        e                       = 0.00867797,  # Wikipedia Neptune page
+                        obliquity               = 28.32,   # Wikipedia Axial Tilt page
+                        longitude_of_perihelion = 44.97135)
 
 def create(name):
     '''Create a named Planet'''

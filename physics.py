@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 Greenweaves Software Pty Ltd
+# Copyright (C) 2015-2019 Greenweaves Software Limited
 
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
 
 class Conversion:
     '''Used to convert between CGS and SI'''
-    cm_per_metre = 100
-    gm_per_Kg = 1000
-    cm3_per_meter3 = cm_per_metre*cm_per_metre*cm_per_metre
-    metres_per_au=149597870700.0 #http://neo.jpl.nasa.gov/glossary/au.html
-    seconds_per_day=24*60*60
+    cm_per_metre    = 100
+    gm_per_Kg       = 1000
+    cm3_per_meter3  = cm_per_metre*cm_per_metre*cm_per_metre
+    metres_per_au   = 149597870700.0 #http://neo.jpl.nasa.gov/glossary/au.html
+    seconds_per_day = 24*60*60
      
     @staticmethod
     def au2meters(au):
@@ -40,23 +40,24 @@ class Conversion:
         Arguments
         meters -- distance in Astronomical Units
         '''        
-        return meters/Conversion.metres_per_au    
+        return meters/Conversion.metres_per_au  
+    
 class CO2:
     
     '''Properties of carbon dioxide'''
-    condensation_temperature = 145
-    latent_heat = 574               # http://www.engineeringtoolbox.com/fluids-evaporation-latent-heat-d_147.html    
-    albedo = 0.6
+    condensation_temperature = 145  # Leighton & Murray, Behaviour of Carbon Dioxide amd other volatiles
+                                    # This is the value at 4 millibars
+    latent_heat              = 574  # http://www.engineeringtoolbox.com/fluids-evaporation-latent-heat-d_147.html    
+    albedo                   = 0.6  # Lowest albedo from Leighton & Murray
     
 class Radiation:
     '''Stefan Bolzmann law'''
-    stefan_bolzmann = 5.670374e-8
+    stefan_bolzmann = 5.670373e-8 #https://en.wikipedia.org/wiki/Stefan%E2%80%93Boltzmann_law
     
     @staticmethod
-    def bolzmann(t):
+    def bolzmann(T):
         '''Use Stefan Bolzmann to calculate radiation from temperature'''
-        t2=t*t    # we call this function often, so don't use exponentiation
-        return Radiation.stefan_bolzmann*t2*t2 
+        return Radiation.stefan_bolzmann*T**4
     
     @staticmethod
     def reverse_bolzmann(radiation):
