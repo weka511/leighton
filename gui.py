@@ -13,15 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>
 
-'''
-User interface for Viewer
+#User interface for Viewer
 
-Do not try to run this under the IDE, as it fights with multiprocessing
-
-Allows user to select text files from previous runs of leighton.py and
-diplay them graphically.
-
-'''
+# Allows user to select text files from previous runs of leighton.py and
+# display them graphically.
 
 import fnmatch,os,viewer,matplotlib.pyplot as plt,multiprocessing as mp,re
 from tkinter import *
