@@ -1,4 +1,6 @@
-# Copyright (C) 2015-2017 Greenweaves Software Pty Ltd
+#!/usr/bin/env python
+
+# Copyright (C) 2015-2022 Greenweaves Software Pty Ltd
 
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,7 +16,15 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>
 
 '''Driver program for Leighton & Murray simulation'''
-import thermalmodel, planet, kepler.solar as s, utilities, sys,getopt, string, physics, math
+
+from getopt        import getopt, GetoptError
+from kepler.solar  import Solar
+from math          import radians
+from physics       import CO2
+from planet        import Planet
+from sys           import argv, exit
+from thermalmodel  import ThermalModel
+from utilities     import ExternalTemperatureLog, format_latitude
 
 def help():
       '''
@@ -29,7 +39,7 @@ def help():
 def display_and_record(message,history):
       '''
       Display a message and log it
-      
+
       Parameters:
           message
           history
@@ -42,7 +52,7 @@ def get_output_file_name(from_date,to_date,latitude,temperature,co2):
       '''
       If output file not specified, choose name
       based on command line parameters
-      
+
       Parameters:
           from_date
           to_date
@@ -50,10 +60,10 @@ def get_output_file_name(from_date,to_date,latitude,temperature,co2):
           temperature    Starting temperature
           co2            Indicates whether CO2 is to be modelled
       '''
-      (ns,lat)=utilities.format_latitude(latitude)
-      co2s = 'co2' if co2 else 'noco2'
+      (ns,lat) = format_latitude(latitude)
+      co2s     = 'co2' if co2 else 'noco2'
       return '{0:d}-{1:d}-{2:d}-{3:s}-{4:.0f}{5:s}.txt'.format(
-            from_date,to_date,int(temperature),co2s,lat,ns).strip()      
+            from_date,to_date,int(temperature),co2s,lat,ns).strip()
 
 def main(argv):
       '''
@@ -67,14 +77,14 @@ def main(argv):
       temperature = -1
       co2         = True
       spec        = [(9,0.015),(10,0.3)]
-      
+
       if len(argv)>0:
             try:
-                  opts, args = getopt.getopt( \
+                  opts, args = getopt( \
                         argv,\
                         'ho:f:t:l:s:m:p:c',\
                         ['ofile=','from','to','latitude','step','temperature','co2','spec'])
-            except getopt.GetoptError:
+            except GetoptError:
                   help()
                   sys.exit(2)
             for opt, arg in opts:
@@ -90,7 +100,7 @@ def main(argv):
                   elif opt in ('-l','--latitude'):
                         latitude=float(arg)
                   elif opt in ('-s','--step'):
-                        step=int(arg)                  
+                        step=int(arg)
                   elif opt in ('-m','--temperature'):
                         temperature=int(arg)
                   elif opt in ('-c','co2'):
@@ -105,60 +115,60 @@ def main(argv):
                                     print ('Could not parse {0}'.format(run))
                                     sys.exit(2)
 
-      mars = planet.create('Mars')
+      mars = Planet.create('Mars')
 
-      solar_model = s.Solar(mars)     
-      
+      solar_model = Solar(mars)
+
       # If user doesn't specify starting temperature, use stable value
       stableTemperatureSpecified = temperature<0
       if stableTemperatureSpecified:
-            temperature=thermalmodel.ThermalModel.stable_temperature(solar_model,mars)
-           
-      if outputfile=='': 
+            temperature=ThermalModel.stable_temperature(solar_model,mars)
+
+      if outputfile=='':
             outputfile=get_output_file_name(from_date,to_date,latitude,temperature,co2)
 
       print('Outputting to {0}'.format(outputfile))
-      
+
       with open(outputfile, 'w') as f:
-            history = utilities.ExternalTemperatureLog(f)
+            history = ExternalTemperatureLog(f)
             display_and_record('Semimajor axes       = {0:10.7f} AU'.format(mars.a),history)
             display_and_record('Eccentricty          = {0:10.7f}'.format(mars.e),history)
             display_and_record('Obliquity            = {0:6.3f}'.format(mars.obliquity),history)
             display_and_record('Hours in Day         = {0:10.7f}'.format(mars.hours_in_day),history)
             display_and_record('Absorption Fraction  = {0:6.3f}'.format(mars.F),history)
-            display_and_record('Emissivity           = {0:6.3f}'.format(mars.E),history)            
+            display_and_record('Emissivity           = {0:6.3f}'.format(mars.E),history)
             display_and_record('Soil Conductivity    = {0:7.3f} W/M/K'.format(mars.K),history)
             display_and_record('Specific Heat        = {0:7.3f} J/Kg/K'.format(mars.C),history)
-            display_and_record('Density              = {0:6.3f} Kg/M3'.format(mars.rho),history)         
+            display_and_record('Density              = {0:6.3f} Kg/M3'.format(mars.rho),history)
             display_and_record('Latitude             = {0:6.1f}'.format(latitude),history)
             display_and_record('Step                 = {0:6.1f}'.format(step),history)
-            
+
             if stableTemperatureSpecified:
                   display_and_record('Starting Temperature = {0:6.1f} K (stable temperature)'.format(temperature),history)
             else:
                   display_and_record('Starting Temperature = {0:6.1f} K'.format(temperature),history)
-                  
+
             if co2:
                   display_and_record('Subliming and freezing CO2',history)
             else:
                   display_and_record('No CO2',history)
-                  
+
             display_and_record('Layering (from top down)',history)
             for n,thickness in spec:
                   display_and_record('{0:d} layers, thickness {1:6.3f} metres each.'.format(n,thickness),history)
-                  
-            display_and_record('Albedo of snowcap    = {0:5.2f}'.format(physics.CO2.albedo),history)
-           
-            thermal=thermalmodel.ThermalModel(math.radians(latitude),
-                                              spec,
-                                              solar_model,
-                                              mars,
-                                              history,
-                                              temperature,
-                                              co2)
+
+            display_and_record('Albedo of snowcap    = {0:5.2f}'.format(CO2.albedo),history)
+
+            thermal=ThermalModel(radians(latitude),
+                                 spec,
+                                 solar_model,
+                                 mars,
+                                 history,
+                                 temperature,
+                                 co2)
             thermal.runModel(from_date,to_date,step)
-            
+
             history.close()
-            
+
 if __name__ == '__main__':
-      main(sys.argv[1:])
+      main(argv[1:])

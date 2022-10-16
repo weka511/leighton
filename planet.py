@@ -1,4 +1,6 @@
-# Copyright (C) 2015-2019 Greenweaves Software Limited
+#!/usr/bin/env python
+
+# Copyright (C) 2015-2022 Greenweaves Software Limited
 
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,13 +17,16 @@
 
 '''Repository for basic data about planets'''
 
-import math, physics, kepler.kepler as k, kepler.solar as s
+from math          import degrees, radians, sqrt
+from physics       import Conversion
+from kepler.kepler import true_anomaly_from_true_longitude, get_distance_from_focus
+from kepler.solar  import hour_angle, cos_zenith_angle, sin_declination
 
 
-    
-class Planet: 
+
+class Planet:
     '''Store information about a planet
-    
+
     Attributes:
                 name
                 a                    Semimajor axis in AU
@@ -35,7 +40,24 @@ class Planet:
                 rho                  Density
                 average_temperature  Average Temperature Kelvin
                 longitude_of_perihelion
-    '''    
+    '''
+
+    @classmethod
+    def create(cls,name):
+        '''Create a named Planet'''
+        planets=[Mercury(),
+                 Venus(),
+                 Earth(),
+                 Mars(),
+                 Jupiter(),
+                 Saturn(),
+                 Uranus(),
+                 Neptune()
+        ]
+        for planet in planets:
+            if planet.name.upper()==name.upper(): return planet
+        return None
+
     def __init__(self,name,a=1,e=0,obliquity=-999,longitude_of_perihelion=-999):
         '''
         Create planet and initialize
@@ -46,29 +68,29 @@ class Planet:
 
         self.a                       = a
         self.e                       = e
-        self.obliquity               = math.radians(obliquity)  
-        self.longitude_of_perihelion = math.radians(longitude_of_perihelion)
-        
+        self.obliquity               = radians(obliquity)
+        self.longitude_of_perihelion = radians(longitude_of_perihelion)
+
     def __str__(self):
         '''Convert planet to string'''
         return ('{0}\n'
                 'Semimajor axis          = {1:9.7f} AU\n'
-                'eccentricity            = {2:8.6f}\n' 
+                'eccentricity            = {2:8.6f}\n'
                 'longitude_of_perihelion = {3:6.3f}\n'
-                'obliquity               = {4:6.3f}\n' 
-                'hours in day            = {5:6.4f}\n' 
+                'obliquity               = {4:6.3f}\n'
+                'hours in day            = {5:6.4f}\n'
                 'absorption              = {6:4.2f}\n'
-                'emissivity              = {7:4.2f}\n' 
+                'emissivity              = {7:4.2f}\n'
                 'conductivity            = {8:5.2g}\n'
                 'specific heat           = {9:6.1f}\n'
-                'rho                     = {10:6.1f}\n' 
+                'rho                     = {10:6.1f}\n'
                 'average temperature     = {11:5.1f}'
                 ).format(
                     self.name,
                     self.a,
                     self.e,
                     self.longitude_of_perihelion,
-                    math.degrees(self.obliquity),
+                    degrees(self.obliquity),
                     self.hours_in_day,
                     self.F,
                     self.E,
@@ -77,36 +99,36 @@ class Planet:
                     self.rho,
                     self.average_temperature
         )
-  
+
     def instantaneous_distance(self,true_longitude):
         '''
         Instantaneaous Distance from Sun in AU
         Appelbaum & Flood equations (2) & (3)
-        Parameters:
+        Paramets:
              true_longitude
         '''
-        f = k.true_anomaly_from_true_longitude(true_longitude,PERH=self.longitude_of_perihelion)
-        return k.get_distance_from_focus(f,self.a,e=self.e)
+        f = true_anomaly_from_true_longitude(true_longitude,PERH=self.longitude_of_perihelion)
+        return get_distance_from_focus(f,self.a,e=self.e)
 
     def sin_declination(self,true_longitude):
         '''
         Sine of declination
         Appelbaum & Flood equation (7)
         Parameters:
-             true_longitude        
+             true_longitude
         '''
-        return s.sin_declination(self.obliquity,true_longitude)
-     
+        return sin_declination(self.obliquity,true_longitude)
+
     def cos_zenith_angle(self,true_longitude,latitude,T):
         '''
         Cosine of zenith angle
         Appelbaum & Flood equation (6)
-        See also Derivation of the solar geometric 
+        See also Derivation of the solar geometric
         relationships using vector analysis by Alistair Sproul
 
         Renewable Energy 32 (2007) 1187-1205
         '''
-        return s.cos_zenith_angle(self.obliquity,true_longitude,latitude,T)
+        return cos_zenith_angle(self.obliquity,true_longitude,latitude,T)
 
     def hour_angle(self,T):
         '''
@@ -115,26 +137,26 @@ class Planet:
         Parameters:
              T     Time in Planetary hours
         '''
-        return s.hour_angle(T)
+        return hour_angle(T)
 
     def get_earth_days_in_year(self):
         '''
         Number of Earth days in year Planetary Year
         Use Kepler's 2nd law
         '''
-        return Earth.get().earth.get_days_in_year()*math.sqrt(self.a*self.a*self.a)
+        return Earth.get().earth.get_days_in_year()*sqrt(self.a*self.a*self.a)
 
     def get_my_days_in_year(self):
         '''
         Number of Planetary days in Planetary Year
         Use Kepler's 2nd law
-        ''' 
+        '''
         earth_days=self.get_earth_days_in_year()
         return earth_days*Earth.get().hours_in_day/self.hours_in_day
-    
+
 class Mercury(Planet):
     '''Data for the planet Mercury'''
-    
+
     def __init__(self):
         '''Create data for planet'''
         Planet.__init__(self,
@@ -143,7 +165,7 @@ class Mercury(Planet):
                         e                       = 0.205630,  # Wikipedia Mercury page
                         obliquity               = 0,  # Wikipedia Axial Tilt page
                         longitude_of_perihelion = 77.45645) # Murray & Dermott
-        
+
 class Venus(Planet):
     '''Data for the planet Venus'''
     def __init__(self):
@@ -154,7 +176,7 @@ class Venus(Planet):
                         e=0.0067,  # Wikipedia Venus page
                         obliquity=177.36, # Wikipedia Axial Tilt pagee
                         longitude_of_perihelion=131.53298)
-        
+
 class Earth(Planet):
     '''Data for the planet Earth'''
     earth = None
@@ -171,12 +193,12 @@ class Earth(Planet):
                         e                       = 0.017, #  eccentricity
                         obliquity               = 23.4,   # Wikipedia Axial Tilt page
                         longitude_of_perihelion = 102.94719)
-        
+
         self.hours_in_day        = 24
-        self.average_temperature = 300        
+        self.average_temperature = 300
     def get_days_in_year(self):
         return 365.256363004
-    
+
 class Mars(Planet):
     '''Data for the planet Mars'''
     def __init__(self):
@@ -187,15 +209,15 @@ class Mars(Planet):
                         e=0.093377,  # Appelbaum & Flood
                         obliquity=24.936, # Appelbaum & Flood
                         longitude_of_perihelion=336.04084)
-        
+
         self.hours_in_day        = 24.6597 #  http://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html
         self.F                   = 0.85 # absorption fraction - Leighton & Murray
         self.E                   = 0.85 # Emissivity - Leighton & Murray
-        self.K                   = 6e-5 * physics.Conversion.cm_per_metre # soil conductivity - Leighton & Murray
-        self.C                   = 3.3 * physics.Conversion.gm_per_Kg # specific heat
-        self.rho                 = 1.6 * physics.Conversion.cm3_per_meter3 / physics.Conversion.gm_per_Kg # density
+        self.K                   = 6e-5 * Conversion.cm_per_metre # soil conductivity - Leighton & Murray
+        self.C                   = 3.3 * Conversion.gm_per_Kg # specific heat
+        self.rho                 = 1.6 * Conversion.cm3_per_meter3 / Conversion.gm_per_Kg # density
         self.average_temperature = 210 #http://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html
-        
+
 class Jupiter(Planet):
     '''Data for the planet Jupiter'''
     def __init__(self):
@@ -217,7 +239,7 @@ class Saturn(Planet):
                         e                       = 0.055723219,  # Wikipedia Saturn page
                         obliquity               = 26.73, # Wikipedia Axial Tilt page
                         longitude_of_perihelion = 92.43194)
-        
+
 class Uranus(Planet):
     '''Data for the planet Uranus'''
     def __init__(self):
@@ -228,7 +250,7 @@ class Uranus(Planet):
                         e=0.047220087,  # Wikipedia Uranus page
                         obliquity=97.77, # Wikipedia Axial Tilt page
                         longitude_of_perihelion=170.96424)
-        
+
 class Neptune(Planet):
     '''Data for the planet Neptune'''
     def __init__(self):
@@ -240,27 +262,13 @@ class Neptune(Planet):
                         obliquity               = 28.32,   # Wikipedia Axial Tilt page
                         longitude_of_perihelion = 44.97135)
 
-def create(name):
-    '''Create a named Planet'''
-    planets=[Mercury(),
-             Venus(),
-             Earth(),
-             Mars(),
-             Jupiter(),
-             Saturn(),
-             Uranus(),
-             Neptune()
-    ]
-    for planet in planets:
-        if planet.name.upper()==name.upper(): return planet
-    return None
 
 if __name__=='__main__':
     import unittest
-    
+
     class TestMarsMethods(unittest.TestCase):
         def setUp(self):
-            self.mars = create('mars')
+            self.mars = Planet.create('mars')
             print(self.mars)
         def test_get_days_in_year(self):
             self.assertAlmostEqual(687,self.mars.get_earth_days_in_year(),places=1)
