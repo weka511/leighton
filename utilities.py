@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2015-2022 Greenweaves Software Pty Ltd
 
 # This is free software: you can redistribute it and/or modify
