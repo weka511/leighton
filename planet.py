@@ -22,8 +22,6 @@ from physics       import Conversion
 from kepler.kepler import true_anomaly_from_true_longitude, get_distance_from_focus
 from kepler.solar  import hour_angle, cos_zenith_angle, sin_declination
 
-
-
 class Planet:
     '''Store information about a planet
 

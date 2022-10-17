@@ -80,9 +80,7 @@ def main(argv):
 
       if len(argv)>0:
             try:
-                  opts, args = getopt( \
-                        argv,\
-                        'ho:f:t:l:s:m:p:c',\
+                  opts, args = getopt( argv, 'ho:f:t:l:s:m:p:c',\
                         ['ofile=','from','to','latitude','step','temperature','co2','spec'])
             except GetoptError:
                   help()

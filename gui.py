@@ -65,7 +65,7 @@ def exec_display_daily_minima_ext(inputfile,figure):
 
 class Viewer(Frame):
     '''
-    This class represents to Frame and UI elements
+    This class represents a Frame and UI elements
     '''
     def __init__(self, master=None):
         Frame.__init__(self, master)
