@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 Greenweaves Software Pty Ltd
+# Copyright (C) 2015-2022 Greenweaves Software Pty Ltd
 
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,15 +15,15 @@
 
 '''Some useful functions that don't fit anywhere else'''
 
-import string, time, math
-
+from math import atan, cos, pi, sin, sqrt
+from time import time
 
 def slip_zip(x):
     '''Given a list, return a new list of triples, with the list 'slipped', e.g.
     [1,2,3,4,5] becomes
     [(None, 1, 2), (1, 2, 3), (2, 3, 4), (3, 4, 5), (4, 5, None)]
     This function is used to iterate through the layers, with each layer being
-    sandwiched between the layers immediately above and below.  ''' 
+    sandwiched between the layers immediately above and below.  '''
     return zip ([None]+x[:-1],x,x[1:]+[None])
 
 def format_latitude(latitude):
@@ -33,7 +33,7 @@ def format_latitude(latitude):
         NS='N'
     elif latitude<0:
         NS='S'
-    else: 
+    else:
         NS=''
     return (NS,abs(latitude))
 
@@ -56,24 +56,24 @@ def extremum(x0,x1,x2,y0,y1,y2):
     '''Find extremem, given that y0<y1>y2, or y0>y1<y2
     Fit a parabola to (x0,y0, (x1,y1), and (x2,y2), and find its extremum
     '''
-    return (0.5 * 
+    return (0.5 *
             ((x2-x1)*(x2+x1)*y0 + (x0-x2)*(x0+x2)*y1 + (x1-x0)*(x1+x0)*y2) /
             ((x2-x1)*y0 + (x0-x2)*y1 + (x1-x0)*y2))
 
 def signum(x):
-    '''Determine sign of its argument. Returne -1, 0, or +1.'''
+    '''Determine sign of its argument. Return -1, 0, or +1.'''
     if x<0: return -1
     if x>0: return +1
     return 0
 
 def guarded_sqrt(x):
     '''Calculate a square root of a positive number, otherwise return 0'''
-    return math.sqrt(x) if x>0 else 0
+    return sqrt(x) if x>0 else 0
 
 def newton_raphson(x,f,df,epsilon,N=50):
     '''
     Solve an equation using the Newton-Raphson method.
-    
+
     ParametersL
        x       Starting value
        f       Function for equation: f(x)=0
@@ -87,42 +87,42 @@ def newton_raphson(x,f,df,epsilon,N=50):
         if abs(x1-x0)<epsilon:
             return x1
         else:
-            x0 = x1    
+            x0 = x1
     return x0
 
 def get_angle(r):
-    abs_theta=0 if r[0]==0 else math.atan(r[1]/r[0])
+    abs_theta=0 if r[0]==0 else atan(r[1]/r[0])
     return abs_theta+adjust_quadrant(r)
 
 def adjust_quadrant(r):
     if r[0]>=0 and r[1]>=0: return 0
-    if r[0]<0 and r[1]>=0: return math.pi/2
-    if r[0]<0 and r[1]<0: return path.pi
-    return 3*math.pi/2
+    if r[0]<0 and r[1]>=0: return pi/2
+    if r[0]<0 and r[1]<0: return pi
+    return 3*pi/2
 
 def get_r(z):
     [x,y]=z
-    return math.sqrt(x*x*y*y)
+    return sqrt(x*x*y*y)
 
 def get_r_velocity(zdot,theta):
     [xdot,ydot]=zdot
-    return math.cos(theta)*xdot + math.sin(theta)*ydot
+    return cos(theta)*xdot + sin(theta)*ydot
 
 def get_theta_dot(zdot,theta,r):
     [xdot,ydot]=zdot
-    return (math.cos(theta)*ydot - math.sin(theta)*xdot)/r
+    return (cos(theta)*ydot - sin(theta)*xdot)/r
 
-def clip_angle(angle,min=0,max=2*math.pi):
+def clip_angle(angle,min=0,max=2*pi):
     length=max-min
     while angle>max:
         angle-=length
     while angle<min:
-        angle+=length        
-    return angle    
+        angle+=length
+    return angle
 
 class TemperatureRecord:
     '''Used to record temperatures in a log
- 
+
     Attributes:
        temperatures
        day
@@ -132,11 +132,11 @@ class TemperatureRecord:
         self.temperatures=[]
         self.day=day+hour/float(hours_in_day)
         self.true_longitude = true_longitude
-        
+
     def add(self,temperature):
         '''Add temperature to log'''
         self.temperatures.append(temperature)
-        
+
     def __str__(self):
         '''Format for display'''
         return '{0} {1} {2}'.format(self.day,self.true_longitude,self.temperatures)
@@ -144,7 +144,7 @@ class TemperatureRecord:
 
 class TemperatureLog:
     '''Used to store temperature values
-    
+
     Abstract class, needs to be implemented by descendents
     '''
     def add(self,record):
@@ -171,10 +171,10 @@ class TemperatureLog:
                 ys_for_period=[]
             ys_for_period.append(y)
 
-        return (xxx,ymin,ymax)    
+        return (xxx,ymin,ymax)
     def close(self):
         pass
-           
+
 class ExternalTemperatureLog(TemperatureLog):
     '''Used to store temperature values in an external file'''
     def __init__(self,logfile,sep=' '):
@@ -182,12 +182,12 @@ class ExternalTemperatureLog(TemperatureLog):
         self.logfile=logfile
         self.sep=sep
         self.skipping=True
-        self.start=time.time()
-        
+        self.start=time()
+
     def add(self,record):
         if self.skipping:
             self.logfile.write('START\n')
-            self.skipping = False        
+            self.skipping = False
         self.logfile.write('{0:f} {1:f}'.format(record.day,record.true_longitude))
         for temperature in record.temperatures:
             self.logfile.write('{0} {1}'.format(self.sep,temperature))
@@ -195,10 +195,10 @@ class ExternalTemperatureLog(TemperatureLog):
 
     def write(self,line):
         self.logfile.write(line+'\n')
-        
+
     def extract(self,channel):
         self.rewind()
-        self.skipping = True        
+        self.skipping = True
         x=[]
         y=[]
         for line in self.logfile:
@@ -218,22 +218,22 @@ class ExternalTemperatureLog(TemperatureLog):
                 result=float(pair[1].strip())
                 self.rewind()
                 return result
-            
+
     #rewind, in case we want to extract data again
     def rewind(self):
         self.logfile.seek(0)
-     
+
     def close(self):
-        self.logfile.write('END, Elapsed time = {0:.1f} seconds\n'.format(time.time()-self.start))
-               
+        self.logfile.write('END, Elapsed time = {0:.1f} seconds\n'.format(time()-self.start))
+
 class InternalTemperatureLog(TemperatureLog):
     '''Used to store temperature values internally'''
     def __init__(self):
         self.history=[]
-        
+
     def add(self,record):
         self.history.append(record)
-    
+
     def extract(self,layer_number,skip=1):
         days=[]
         result=[]
@@ -254,11 +254,11 @@ if __name__=='__main__':
         r2.add(2)
         r2.add(2.345678)
         r2.add(99)
-        log.add(r2) 
-        
+        log.add(r2)
+
     for a,b,c in slip_zip([1,2,3,4,5]):
         print (a,b,c)
-        
+
     log=InternalTemperatureLog()
     r1=TemperatureRecord(0,1,24,0)
     r1.add(1)
@@ -269,6 +269,6 @@ if __name__=='__main__':
     r2.add(2)
     r2.add(2.345678)
     r2.add(99)
-    log.add(r2) 
+    log.add(r2)
     (days,surface_temp) = log.extract(0)
-    print (days,surface_temp)   
+    print (days,surface_temp)
