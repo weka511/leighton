@@ -22,7 +22,7 @@ Replication of [Leighton and Murray's Behavior of Carbon Dioside and Other Volat
 |utilities.py|Utility functions for log files, zipping lists, choosing colours for plots |
 |viewer.py|Used to plot data files produced by _leighton.py_ and _cores.py_ |
 
-The code has been tested with Python 3.5.4 |Anaconda 2.4.0 (64-bit).
+The code has been tested with Python 3.10.) (64-bit).
 
 ## Coding conventions
 
