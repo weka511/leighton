@@ -239,11 +239,11 @@ class Surface(Layer):
             temperature inflow (subtract latent heat)
         '''
         if self.total_co2>0 and total_inflow_before_latent_heat>0:
-            self.total_co2-=abs(total_inflow_before_latent_heat)/physics.CO2.latent_heat
+            self.total_co2-=abs(total_inflow_before_latent_heat)/CO2.latent_heat
             if self.total_co2>0:
                 return 0
             else:
-                balance        = abs(self.total_co2)*physics.CO2.latent_heat
+                balance        = abs(self.total_co2)*CO2.latent_heat
                 self.total_co2 = 0
                 return balance
         else:
